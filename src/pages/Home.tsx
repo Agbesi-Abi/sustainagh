@@ -134,7 +134,7 @@ const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
       </section>
 
       {/* Trust Badges */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-20">
+      {/* <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-20">
         <div className="rounded-2xl bg-stone-50 p-8 md:p-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
@@ -155,7 +155,7 @@ const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };
