@@ -1,6 +1,6 @@
 
-import { Product, Recipe } from './types';
-import { getProducts, getCategories, getRecipes } from './lib/firestore';
+import { Product, Recipe } from './src/types';
+import { getProducts, getCategories, getRecipes } from './src/lib/firestore';
 
 export const getProductsAsync = async (): Promise<Product[]> => {
   return await getProducts();

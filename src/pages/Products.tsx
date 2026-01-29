@@ -3,13 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
-import { getProductsAsync, getCategoriesAsync } from '../constants';
+import { getProductsAsync, getCategoriesAsync } from '../../constants';
 
 interface ProductsProps {
   onAddToCart: (p: Product) => void;
 }
 
 const Products: React.FC<ProductsProps> = ({ onAddToCart }) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [sortBy, setSortBy] = useState<string>('featured');
   const location = useLocation();

@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { PRODUCTS } from "../constants";
+import { PRODUCTS } from "../../constants";
 
 export async function getSustainaAdvice(query: string, history: { role: 'user' | 'model', text: string }[]) {
   // Always initialize GoogleGenAI with a named parameter for apiKey using process.env.GEMINI_API_KEY directly.

@@ -1,9 +1,5 @@
-# TODO: Seed Firestore Database
-
-## Tasks
-- [ ] Create seed-firestore.js script to populate Firestore with sample data from constants.ts
-- [ ] Add products collection seeding
-- [ ] Add categories collection seeding
-- [ ] Add recipes collection seeding
-- [ ] Add users collection seeding
-- [ ] Test the seeding script
+- [x] Install Tailwind CSS dependencies (tailwindcss, postcss, autoprefixer)
+- [x] Create tailwind.config.js
+- [x] Create src/index.css with Tailwind directives
+- [x] Import CSS in src/main.tsx
+- [x] Run npm install to install dependencies

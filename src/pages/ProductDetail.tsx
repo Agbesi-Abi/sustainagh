@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PRODUCTS } from '../constants';
+import { PRODUCTS } from '../../constants';
 import { Product } from '../types';
 
 interface ProductDetailProps {

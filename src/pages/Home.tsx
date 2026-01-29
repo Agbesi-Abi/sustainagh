@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
-import { getProductsAsync, getCategoriesAsync } from '../constants';
+import { getProductsAsync, getCategoriesAsync } from '../../constants';
 
 interface HomeProps {
   onAddToCart: (p: Product) => void;

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { PRODUCTS, CATEGORIES } from '../constants';
+import { PRODUCTS, CATEGORIES } from '../../constants';
 import { Product } from '../types';
 import { GoogleGenAI } from "@google/genai";
 // import { db } from '../lib/firebase';

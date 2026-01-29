@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { RECIPES, PRODUCTS } from '../constants';
+import { RECIPES, PRODUCTS } from '../../constants';
 import { Product } from '../types';
 import { Link } from 'react-router-dom';
 
