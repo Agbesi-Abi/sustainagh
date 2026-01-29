@@ -30,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onOpenCart, onOpenAuth, user
       <div className="max-w-7xl mx-auto flex items-center h-20 gap-8">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 shrink-0">
-          <i className="fa-solid fa-leaf text-sustaina-green text-2xl"></i>
+          <img src="/Sustaina Logo@18x.png" alt="Sustaina Logo" className="w-8 h-8" />
           <span className="text-2xl font-bold tracking-tight text-sustaina-green">Sustaina</span>
         </Link>
 

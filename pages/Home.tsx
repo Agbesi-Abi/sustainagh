@@ -1,14 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
-import { PRODUCTS, CATEGORIES } from '../constants';
+import { getProductsAsync, getCategoriesAsync } from '../constants';
 
 interface HomeProps {
   onAddToCart: (p: Product) => void;
 }
 
 const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<{ name: string; image: string }[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [productsData, categoriesData] = await Promise.all([
+          getProductsAsync(),
+          getCategoriesAsync()
+        ]);
+        setProducts(productsData);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+    loadData();
+  }, []);
   return (
     <div className="pb-16">
       {/* Compact Hero Section */}
@@ -24,9 +42,6 @@ const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
           
           <div className="relative h-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 text-white max-w-xl">
             <div className="inline-flex items-center gap-2 mb-4">
-              <span className="px-3 py-1 bg-sustaina-yellow text-stone-900 text-xs font-bold uppercase tracking-wider rounded-full">
-                New Season
-              </span>
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
@@ -41,12 +56,6 @@ const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
                 className="inline-flex items-center justify-center px-8 py-3.5 bg-sustaina-yellow text-stone-900 font-bold rounded-xl hover:bg-white hover:scale-[1.02] active:scale-95 transition-all duration-200 shadow-lg"
               >
                 Shop Now
-              </Link>
-              <Link 
-                to="/about" 
-                className="inline-flex items-center justify-center px-8 py-3.5 bg-white/10 backdrop-blur-sm text-white font-medium rounded-xl hover:bg-white/20 transition-all duration-200 border border-white/20"
-              >
-                Learn More
               </Link>
             </div>
           </div>
@@ -71,15 +80,15 @@ const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {CATEGORIES.map((cat, i) => (
-            <Link 
-              key={i} 
+          {categories.map((cat, i) => (
+            <Link
+              key={i}
               to={`/shop?category=${cat.name}`}
               className="group"
             >
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-stone-100 shadow-sm hover:shadow-md transition-all duration-300">
-                <img 
-                  src={cat.image} 
+                <img
+                  src={cat.image}
                   alt={cat.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
@@ -113,11 +122,11 @@ const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {PRODUCTS.slice(0, 4).map(product => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              onAddToCart={onAddToCart} 
+          {products.slice(0, 4).map(product => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={onAddToCart}
               className="hover:shadow-lg transition-shadow duration-300"
             />
           ))}

@@ -1,6 +1,9 @@
-# TODO: Make Firebase Work
+# TODO: Seed Firestore Database
 
-- [x] Remove mock null exports in lib/firebase.ts
-- [x] Enable Firebase auth in AuthModal.tsx
-- [x] Enable Firebase auth in App.tsx
-- [ ] Test Firebase authentication functionality
+## Tasks
+- [ ] Create seed-firestore.js script to populate Firestore with sample data from constants.ts
+- [ ] Add products collection seeding
+- [ ] Add categories collection seeding
+- [ ] Add recipes collection seeding
+- [ ] Add users collection seeding
+- [ ] Test the seeding script

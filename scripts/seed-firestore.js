@@ -1,22 +1,20 @@
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
 
-import { Product, Recipe } from './types';
-import { getProducts, getCategories, getRecipes } from './lib/firestore';
-
-export const getProductsAsync = async (): Promise<Product[]> => {
-  return await getProducts();
+const firebaseConfig = {
+  apiKey: "AIzaSyDst_NAOdFVJejjq8ggPXqhcnCPbwE2-jQ",
+  authDomain: "sustaina-1e67d.firebaseapp.com",
+  projectId: "sustaina-1e67d",
+  storageBucket: "sustaina-1e67d.appspot.com",
+  messagingSenderId: "333908882585",
+  appId: "1:333908882585:web:865e9b8f2d5c80881c67d6"
 };
 
-export const getCategoriesAsync = async (): Promise<{ name: string; image: string }[]> => {
-  const categories = await getCategories();
-  return categories.map(cat => ({ name: cat.name, image: cat.image }));
-};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-export const getRecipesAsync = async (): Promise<Recipe[]> => {
-  return await getRecipes();
-};
-
-// Legacy static data for seeding
-export const PRODUCTS: Product[] = [
+// Sample data from constants.ts
+const PRODUCTS = [
   {
     id: 'shito-sauce',
     name: 'Shito Sauce',
@@ -99,7 +97,7 @@ export const PRODUCTS: Product[] = [
   }
 ];
 
-export const CATEGORIES = [
+const CATEGORIES = [
   { name: 'Fresh Vegetables', image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?auto=format&fit=crop&q=80&w=800' },
   { name: 'Grains & Tubers', image: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?auto=format&fit=crop&q=80&w=800' },
   { name: 'Spices & Seasonings', image: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?auto=format&fit=crop&q=80&w=800' },
@@ -107,7 +105,7 @@ export const CATEGORIES = [
   { name: 'Snacks & Beverages', image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800' }
 ];
 
-export const RECIPES: Recipe[] = [
+const RECIPES = [
   {
     id: 'waakye-delight',
     name: 'Traditional Waakye',
@@ -141,3 +139,37 @@ export const RECIPES: Recipe[] = [
     ]
   }
 ];
+
+const USERS = [
+  {
+    id: 'admin-user',
+    name: 'Admin User',
+    email: 'admin@sustaina.com',
+    role: 'admin',
+    createdAt: new Date()
+  },
+  {
+    id: 'test-user',
+    name: 'Test User',
+    email: 'user@sustaina.com',
+    role: 'user',
+    createdAt: new Date()
+  }
+];
+
+async function seedDatabase() {
+  try {
+    // Seed users
+    console.log('Seeding users...');
+    for (const user of USERS) {
+      await addDoc(collection(db, 'users'), user);
+      console.log(`Added user: ${user.name}`);
+    }
+
+    console.log('Database seeded successfully!');
+  } catch (error) {
+    console.error('Error seeding database:', error);
+  }
+}
+
+seedDatabase().then(() => process.exit(0)).catch(console.error);

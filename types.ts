@@ -31,3 +31,11 @@ export interface Recipe {
   ingredients: string[]; // IDs of products
   instructions: string[];
 }
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'admin';
+  createdAt: Date;
+}
