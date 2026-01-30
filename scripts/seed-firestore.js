@@ -159,6 +159,27 @@ const USERS = [
 
 async function seedDatabase() {
   try {
+    // Seed categories
+    console.log('Seeding categories...');
+    for (const category of CATEGORIES) {
+      await addDoc(collection(db, 'categories'), category);
+      console.log(`Added category: ${category.name}`);
+    }
+
+    // Seed products
+    console.log('Seeding products...');
+    for (const product of PRODUCTS) {
+      await addDoc(collection(db, 'products'), product);
+      console.log(`Added product: ${product.name}`);
+    }
+
+    // Seed recipes
+    console.log('Seeding recipes...');
+    for (const recipe of RECIPES) {
+      await addDoc(collection(db, 'recipes'), recipe);
+      console.log(`Added recipe: ${recipe.name}`);
+    }
+
     // Seed users
     console.log('Seeding users...');
     for (const user of USERS) {

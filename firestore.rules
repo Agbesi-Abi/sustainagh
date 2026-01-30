@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to products and categories for all users (public marketplace)
+    match /products/{product} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    match /categories/{category} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    match /recipes/{recipe} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Users collection - authenticated users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow create: if request.auth != null;
+    }
+
+    // Orders collection - authenticated users can read/write their own orders
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read, write: if request.auth != null && request.auth.token.admin == true;
+      allow create: if request.auth != null;
+    }
+  }
+}

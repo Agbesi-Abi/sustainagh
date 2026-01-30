@@ -29,7 +29,14 @@ self.addEventListener("activate", event => {
 
 // Fetch
 self.addEventListener("fetch", event => {
+  if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request).catch(err => {
+        console.error('Fetch failed:', err);
+        // Return a service unavailable response to prevent uncaught errors
+        return new Response('Service Unavailable', { status: 503, statusText: 'Service Unavailable' });
+      });
+    })
   );
 });
