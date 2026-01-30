@@ -70,6 +70,7 @@ const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
               <img 
                 src={cat.image} 
                 alt={cat.name} 
+                loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-125"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-stone-900/90 via-transparent to-transparent group-hover:from-sustaina-green/90 transition-colors"></div>
@@ -144,6 +145,7 @@ const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
               src="https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?auto=format&fit=crop&q=80&w=1200" 
               className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" 
               alt="Farmer Emmanuel"
+              loading="lazy"
             />
           </div>
         </div>
