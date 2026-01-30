@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
-import { getProductsAsync, getCategoriesAsync } from '../constants';
+import { PRODUCTS, CATEGORIES } from '../constants';
 
 interface ProductsProps {
   onAddToCart: (p: Product) => void;
@@ -16,25 +16,6 @@ const Products: React.FC<ProductsProps> = ({ onAddToCart }) => {
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get('search')?.toLowerCase() || '';
 
-  // Load data from Firestore
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [productsData, categoriesData] = await Promise.all([
-          getProductsAsync(),
-          getCategoriesAsync()
-        ]);
-        setProducts(productsData);
-        setCategories(categoriesData);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
-
   // Clear category if searching
   useEffect(() => {
     if (searchQuery) {
@@ -42,11 +23,11 @@ const Products: React.FC<ProductsProps> = ({ onAddToCart }) => {
     }
   }, [searchQuery]);
 
-  const filteredProducts = products
+  const filteredProducts = PRODUCTS
     .filter(p => {
       const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
-      const matchesSearch = !searchQuery ||
-        p.name.toLowerCase().includes(searchQuery) ||
+      const matchesSearch = !searchQuery || 
+        p.name.toLowerCase().includes(searchQuery) || 
         p.description.toLowerCase().includes(searchQuery) ||
         p.tags.some(t => t.toLowerCase().includes(searchQuery));
       return matchesCategory && matchesSearch;
@@ -57,19 +38,6 @@ const Products: React.FC<ProductsProps> = ({ onAddToCart }) => {
       if (sortBy === 'score') return b.sustainabilityScore - a.sustainabilityScore;
       return 0;
     });
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="text-center py-32">
-          <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <i className="fa-solid fa-spinner text-stone-400 text-3xl animate-spin"></i>
-          </div>
-          <h3 className="text-xl font-bold text-stone-900 mb-2">Loading products...</h3>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -97,8 +65,8 @@ const Products: React.FC<ProductsProps> = ({ onAddToCart }) => {
             >
               All Items
             </button>
-            {categories.map(cat => {
-              const count = products.filter(p => p.category === cat.name || (cat.name === 'Fresh Vegetables' && p.category === 'Vegetables')).length;
+            {CATEGORIES.map(cat => {
+              const count = PRODUCTS.filter(p => p.category === cat.name || (cat.name === 'Fresh Vegetables' && p.category === 'Vegetables')).length;
               // Simple mapping check
               const realCatName = cat.name === 'Fresh Vegetables' ? 'Vegetables' : cat.name;
 

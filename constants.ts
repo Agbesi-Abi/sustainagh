@@ -1,21 +1,6 @@
 
 import { Product, Recipe } from './types';
-import { getProducts, getCategories, getRecipes } from './lib/firestore';
 
-export const getProductsAsync = async (): Promise<Product[]> => {
-  return await getProducts();
-};
-
-export const getCategoriesAsync = async (): Promise<{ name: string; image: string }[]> => {
-  const categories = await getCategories();
-  return categories.map(cat => ({ name: cat.name, image: cat.image }));
-};
-
-export const getRecipesAsync = async (): Promise<Recipe[]> => {
-  return await getRecipes();
-};
-
-// Legacy static data for seeding
 export const PRODUCTS: Product[] = [
   {
     id: 'shito-sauce',

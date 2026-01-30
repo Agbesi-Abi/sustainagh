@@ -16,10 +16,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import UserOrders from './pages/UserOrders';
 import NotFound from './pages/NotFound';
 import { CartItem, Product } from './types';
-import { auth } from './lib/firebase';
-import * as firebaseAuthExports from 'firebase/auth';
-
-const { onAuthStateChanged, signOut } = firebaseAuthExports as any;
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -33,38 +29,13 @@ const App: React.FC = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [user, setUser] = useState<any | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [authModal, setAuthModal] = useState<{ isOpen: boolean, type: 'login' | 'signup' }>({ isOpen: false, type: 'login' });
 
   useEffect(() => {
     const handleScroll = () => setShowBackToTop(window.scrollY > 400);
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
     window.addEventListener('scroll', handleScroll);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser: any) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const idTokenResult = await currentUser.getIdTokenResult();
-        setIsAdmin(!!idTokenResult.claims.admin);
-      } else {
-        setIsAdmin(false);
-      }
-    });
-    return () => unsubscribe();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -114,7 +85,6 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
     setUser(null);
   };
 
@@ -122,20 +92,11 @@ const App: React.FC = () => {
     <Router>
       <ScrollToTop />
       <div className="min-h-screen flex flex-col bg-[#fdfdfd] selection:bg-sustaina-green selection:text-white">
-        {/* Offline Banner */}
-        {isOffline && (
-          <div className="bg-amber-500 text-white text-[10px] font-black uppercase tracking-[0.2em] py-2 text-center animate-in fade-in slide-in-from-top duration-500 sticky top-0 z-[60]">
-            <i className="fa-solid fa-cloud-showers-heavy mr-2"></i>
-            You are currently offline. Browsing cached harvest.
-          </div>
-        )}
-
-        <Navbar
-          cartCount={cartCount}
-          onOpenCart={() => setIsCartOpen(true)}
+        <Navbar 
+          cartCount={cartCount} 
+          onOpenCart={() => setIsCartOpen(true)} 
           onOpenAuth={openAuth}
           user={user}
-          isAdmin={isAdmin}
           onLogout={handleLogout}
         />
         
@@ -148,7 +109,7 @@ const App: React.FC = () => {
             <Route path="/recipes" element={<Recipes onAddToCart={addToCart} />} />
             <Route path="/deals" element={<Deals onAddToCart={addToCart} />} />
             <Route path="/about" element={<About />} />
-            <Route path="/admin" element={isAdmin ? <AdminDashboard /> : <NotFound />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/orders" element={<UserOrders user={user} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
