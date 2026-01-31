@@ -1,142 +1,358 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Product } from '../../types';
-import { getProducts, addProduct, updateProduct, deleteProduct } from '../../lib/firestore';
+import { getProducts, deleteProduct, addProduct, updateProduct } from '../../lib/firestore';
 
 const AdminProducts: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [showProductModal, setShowProductModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [newProduct, setNewProduct] = useState<Omit<Product, 'id'>>({
+    name: '',
+    price: 0,
+    description: '',
+    category: 'Vegetables',
+    image: '',
+    sustainabilityScore: 0,
+    tags: [],
+  });
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const productsData = await getProducts();
-        setProducts(productsData);
-      } catch (error) {
-        console.error('Error fetching products:', error);
+        const data = await getProducts();
+        setProducts(data);
+      } catch (err) {
+        console.error('Failed to fetch products', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProducts();
   }, []);
 
-  const handleAddProduct = () => {
-    setEditingProduct(null);
-    setShowProductModal(true);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this product?')) return;
+    await deleteProduct(id);
+    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setShowProductModal(true);
-  };
-
-  const handleDeleteProduct = async (productId: string) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
-        await deleteProduct(productId);
-        setProducts(prev => prev.filter(p => p.id !== productId));
-      } catch (error) {
-        console.error('Error deleting product:', error);
-      }
+  const handleAddProduct = async () => {
+    try {
+      const productId = await addProduct(newProduct);
+      setProducts(prev => [...prev, { ...newProduct, id: productId }]);
+      setNewProduct({
+        name: '',
+        price: 0,
+        description: '',
+        category: 'Vegetables',
+        image: '',
+        sustainabilityScore: 0,
+        tags: [],
+      });
+      setShowAddModal(false);
+    } catch (err) {
+      console.error('Failed to add product', err);
     }
   };
 
+  const handleEditProduct = async () => {
+    if (!editingProduct) return;
+    try {
+      await updateProduct(editingProduct.id, editingProduct);
+      setProducts(prev => prev.map(p => p.id === editingProduct.id ? editingProduct : p));
+      setEditingProduct(null);
+      setShowEditModal(false);
+    } catch (err) {
+      console.error('Failed to update product', err);
+    }
+  };
+
+  const openEditModal = (product: Product) => {
+    setEditingProduct(product);
+    setShowEditModal(true);
+  };
+
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-10 gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-1 flex-wrap">
-            <span>Market Management</span>
-            <i className="fa-solid fa-chevron-right text-[8px] hidden md:inline"></i>
-            <span className="text-sustaina-green md:inline">Inventory</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-stone-900 capitalize tracking-tight">
-            Inventory Management
+    <section className="space-y-8">
+      {/* Header */}
+      <header className="flex flex-col gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+          Inventory
+        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-stone-900">
+            Products
           </h1>
+          <button className="inline-flex items-center gap-2 rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50">
+            <i className="fa-solid fa-plus text-xs" />
+            Add product
+          </button>
         </div>
+        <p className="text-sm text-stone-500 max-w-xl">
+          Manage your product catalogue, pricing, and availability.
+        </p>
       </header>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl sm:text-2xl font-black text-stone-900">Inventory Management</h2>
-        <button
-          onClick={handleAddProduct}
-          className="bg-sustaina-green text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-bold hover:bg-sustaina-green/90 transition-all w-full sm:w-auto text-sm sm:text-base"
-        >
-          Add New Product
-        </button>
-      </div>
-
-      <div className="bg-white rounded-2xl sm:rounded-[3.5rem] border border-stone-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
-          <table className="w-full text-left min-w-[800px] sm:min-w-full">
-            <thead className="bg-stone-50/50 text-stone-400 text-[10px] font-black uppercase tracking-[0.2em]">
-              <tr>
-                <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6">Product</th>
-                <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6">Category</th>
-                <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 text-right">Price</th>
-                <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 text-center">Stock</th>
-                <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {products.map(product => (
-                <tr key={product.id} className="hover:bg-stone-50/30 transition-colors">
-                  <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <img src={product.image} alt={product.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl object-cover" />
-                      <div className="min-w-0">
-                        <p className="font-black text-stone-900 truncate">{product.name}</p>
-                        <p className="text-[10px] text-stone-400 font-medium truncate max-w-[200px]">
-                          {product.description.slice(0, 50)}...
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
-                    <span className="px-2 sm:px-3 py-1 bg-stone-100 text-stone-600 rounded-lg text-[9px] font-black uppercase tracking-widest inline-block">
-                      {product.category}
-                    </span>
-                  </td>
-                  <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 font-black text-stone-900 text-right">
-                    GH₵{product.price.toFixed(2)}
-                  </td>
-                  <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 text-center">
-                    <span className="px-2 sm:px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg text-[9px] font-black uppercase tracking-widest inline-block">
-                      In Stock
-                    </span>
-                  </td>
-                  <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
-                    <div className="flex justify-center gap-1 sm:gap-2">
-                      <button
-                        onClick={() => handleEditProduct(product)}
-                        className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all"
-                      >
-                        <i className="fa-solid fa-edit text-xs"></i>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all"
-                      >
-                        <i className="fa-solid fa-trash text-xs"></i>
-                      </button>
-                    </div>
-                  </td>
+      {/* Table */}
+      <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-sm text-stone-500">Loading products…</div>
+        ) : products.length === 0 ? (
+          <div className="p-8 text-sm text-stone-500">No products found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-sm">
+              <thead className="bg-stone-50 border-b border-stone-200">
+                <tr className="text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  <th className="px-6 py-4">Product</th>
+                  <th className="px-6 py-4">Category</th>
+                  <th className="px-6 py-4 text-right">Price</th>
+                  <th className="px-6 py-4 text-center">Status</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody className="divide-y divide-stone-100">
+                {products.map(product => (
+                  <tr key={product.id} className="hover:bg-stone-50">
+                    {/* Product */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="h-10 w-10 rounded-md object-cover border border-stone-200"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-medium text-stone-900 truncate">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-stone-500 truncate max-w-[240px]">
+                            {product.description}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Category */}
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-medium text-stone-600">
+                        {product.category}
+                      </span>
+                    </td>
+
+                    {/* Price */}
+                    <td className="px-6 py-4 text-right font-medium text-stone-900">
+                      GH₵{product.price.toFixed(2)}
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 border border-emerald-200">
+                        Active
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4 text-right">
+                      <div className="inline-flex items-center gap-2">
+                        <button
+                          onClick={() => openEditModal(product)}
+                          className="text-xs text-stone-500 hover:text-stone-900"
+                        >
+                          Edit
+                        </button>
+                        <span className="text-stone-300">•</span>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          className="text-xs text-red-600 hover:text-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Product Modal - Placeholder for now */}
-      {showProductModal && (
+      {/* Add Product Modal */}
+      {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-3xl">
-            <p>Product Modal - To be implemented</p>
-            <button onClick={() => setShowProductModal(false)}>Close</button>
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold text-stone-900 mb-4">Add New Product</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Description</label>
+                <textarea
+                  value={newProduct.description}
+                  onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Price (GH₵)</label>
+                <input
+                  type="number"
+                  value={newProduct.price}
+                  onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Category</label>
+                <select
+                  value={newProduct.category}
+                  onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value as Product['category'] })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                >
+                  <option value="Vegetables">Vegetables</option>
+                  <option value="Grains & Tubers">Grains & Tubers</option>
+                  <option value="Pantry">Pantry</option>
+                  <option value="Proteins">Proteins</option>
+                  <option value="Fruit">Fruit</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Image URL</label>
+                <input
+                  type="text"
+                  value={newProduct.image}
+                  onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Sustainability Score (0-100)</label>
+                <input
+                  type="number"
+                  value={newProduct.sustainabilityScore}
+                  onChange={(e) => setNewProduct({ ...newProduct, sustainabilityScore: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                  min="0"
+                  max="100"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="flex-1 px-4 py-2 text-stone-700 border border-stone-300 rounded-md hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddProduct}
+                className="flex-1 px-4 py-2 bg-stone-900 text-white rounded-md hover:bg-stone-800"
+              >
+                Add Product
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+
+      {/* Edit Product Modal */}
+      {showEditModal && editingProduct && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold text-stone-900 mb-4">Edit Product</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={editingProduct.name}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Description</label>
+                <textarea
+                  value={editingProduct.description}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Price (GH₵)</label>
+                <input
+                  type="number"
+                  value={editingProduct.price}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Category</label>
+                <select
+                  value={editingProduct.category}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value as Product['category'] })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                >
+                  <option value="Vegetables">Vegetables</option>
+                  <option value="Grains & Tubers">Grains & Tubers</option>
+                  <option value="Pantry">Pantry</option>
+                  <option value="Proteins">Proteins</option>
+                  <option value="Fruit">Fruit</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Image URL</label>
+                <input
+                  type="text"
+                  value={editingProduct.image}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Sustainability Score (0-100)</label>
+                <input
+                  type="number"
+                  value={editingProduct.sustainabilityScore}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, sustainabilityScore: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-stone-500"
+                  min="0"
+                  max="100"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-2 text-stone-700 border border-stone-300 rounded-md hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditProduct}
+                className="flex-1 px-4 py-2 bg-stone-900 text-white rounded-md hover:bg-stone-800"
+              >
+                Update Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 };
 

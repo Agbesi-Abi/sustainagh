@@ -1,94 +1,122 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Order } from '../../types';
 import { getOrders, updateOrderStatus } from '../../lib/firestore';
 
+const statusStyles: Record<Order['status'], string> = {
+  Pending: 'bg-amber-50 text-amber-700 border-amber-200',
+  Processing: 'bg-blue-50 text-blue-700 border-blue-200',
+  Delivered: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+};
+
 const AdminOrders: React.FC = () => {
-  const [liveOrders, setLiveOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const ordersData = await getOrders();
-        setLiveOrders(ordersData);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
+        const data = await getOrders();
+        setOrders(data);
+      } catch (err) {
+        console.error('Failed to fetch orders', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchOrders();
   }, []);
 
-  const handleUpdateStatus = async (orderId: string, status: Order['status']) => {
-    try {
-      await updateOrderStatus(orderId, status);
-      setLiveOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
-    } catch (error) {
-      console.error('Error updating order status:', error);
-    }
+  const handleStatusChange = async (id: string, status: Order['status']) => {
+    await updateOrderStatus(id, status);
+    setOrders(prev =>
+      prev.map(order => (order.id === id ? { ...order, status } : order))
+    );
   };
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-10 gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-1 flex-wrap">
-            <span>Market Management</span>
-            <i className="fa-solid fa-chevron-right text-[8px] hidden md:inline"></i>
-            <span className="text-sustaina-green md:inline">Live Orders</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-stone-900 capitalize tracking-tight">
-            Live Orders
-          </h1>
-        </div>
+    <section className="space-y-8">
+      {/* Header */}
+      <header className="flex flex-col gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+          Operations
+        </p>
+        <h1 className="text-2xl font-semibold text-stone-900">
+          Orders
+        </h1>
+        <p className="text-sm text-stone-500 max-w-xl">
+          Track, manage, and update customer orders in real time.
+        </p>
       </header>
 
-      <div className="bg-white rounded-2xl sm:rounded-[3.5rem] border border-stone-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
-          <table className="w-full text-left min-w-[640px] sm:min-w-full">
-            <thead className="bg-stone-50/50 text-stone-400 text-[10px] font-black uppercase tracking-[0.2em]">
-              <tr>
-                <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6">Customer</th>
-                <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 text-center">Location</th>
-                <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 text-right">Amount</th>
-                <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {liveOrders.map(order => (
-                <tr key={order.id} className="hover:bg-stone-50/30 transition-colors">
-                  <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 min-w-[200px]">
-                    <p className="font-black text-stone-900 truncate">{order.customerName}</p>
-                    <p className="text-[10px] text-stone-400 font-medium truncate">{order.email}</p>
-                  </td>
-                  <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 text-center">
-                    <span className="px-2 sm:px-3 py-1 bg-stone-100 text-stone-600 rounded-lg text-[9px] font-black uppercase tracking-widest inline-block">
-                      {order.region}
-                    </span>
-                  </td>
-                  <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 font-black text-stone-900 text-right">
-                    GH₵{order.total?.toFixed(2)}
-                  </td>
-                  <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
-                     <div className="flex justify-center">
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                          className={`text-[9px] font-black uppercase tracking-widest bg-stone-50 px-3 sm:px-4 py-2 rounded-xl border border-stone-100 focus:outline-none w-full max-w-[140px] ${
-                            order.status === 'Delivered' ? 'text-emerald-600' : 'text-amber-500'
-                          }`}
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Processing">Processing</option>
-                          <option value="Delivered">Delivered</option>
-                        </select>
-                     </div>
-                  </td>
+      {/* Table Card */}
+      <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-sm text-stone-500">Loading orders…</div>
+        ) : orders.length === 0 ? (
+          <div className="p-8 text-sm text-stone-500">No orders found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead className="bg-stone-50 border-b border-stone-200">
+                <tr className="text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  <th className="px-6 py-4">Customer</th>
+                  <th className="px-6 py-4">Region</th>
+                  <th className="px-6 py-4 text-right">Total</th>
+                  <th className="px-6 py-4 text-center">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody className="divide-y divide-stone-100">
+                {orders.map(order => (
+                  <tr key={order.id} className="hover:bg-stone-50">
+                    {/* Customer */}
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-stone-900">
+                        {order.customerName}
+                      </div>
+                      <div className="text-xs text-stone-500">
+                        {order.email}
+                      </div>
+                    </td>
+
+                    {/* Region */}
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-stone-100 text-stone-600">
+                        {order.region}
+                      </span>
+                    </td>
+
+                    {/* Amount */}
+                    <td className="px-6 py-4 text-right font-medium text-stone-900">
+                      GH₵{order.total?.toFixed(2)}
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-6 py-4 text-center">
+                      <select
+                        value={order.status}
+                        onChange={(e) =>
+                          handleStatusChange(order.id, e.target.value as Order['status'])
+                        }
+                        className={`
+                          text-xs font-semibold rounded-md px-3 py-2 border
+                          focus:outline-none focus:ring-2 focus:ring-stone-300
+                          ${statusStyles[order.status]}
+                        `}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Delivered">Delivered</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 };
 

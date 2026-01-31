@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import CartDrawer from './components/CartDrawer';
+// import ChatAssistant from './components/ChatAssistant';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -25,142 +26,161 @@ import { addUser, getUserById, getUsers, updateUser, deleteUser } from './lib/fi
 const { onAuthStateChanged, signOut } = firebaseAuthExports as any;
 
 /* ================= SAFARI-SAFE SCROLL ================= */
-const ScrollToTop: React.FC = () => {
+const ScrollToTop = () => {
   const { pathname } = useLocation();
+
   useEffect(() => {
-    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
   }, [pathname]);
+
   return null;
 };
 
-/* ================= CUSTOM HOOKS ================= */
-const useOnlineStatus = () => {
+const App: React.FC = () => {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [user, setUser] = useState<any | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [mounted, setMounted] = useState(false);
+  const [authModal, setAuthModal] = useState<{ isOpen: boolean; type: 'login' | 'signup' }>({
+    isOpen: false,
+    type: 'login',
+  });
+
+  /* ================= SAFARI BODY SAFETY ================= */
+  useEffect(() => {
+    document.body.style.overflowX = 'hidden';
+  }, []);
+
+  /* ================= DELAY HEAVY OVERLAYS ================= */
+  useEffect(() => {
+    requestAnimationFrame(() => setMounted(true));
+  }, []);
+
+  /* ================= ONLINE / OFFLINE ================= */
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-  return isOffline;
-};
 
-const useAuth = () => {
-  const [user, setUser] = useState<any | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-
+  /* ================= AUTH ================= */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser: any) => {
       setUser(currentUser);
-
-      if (!currentUser) {
-        setIsAdmin(false);
-        return;
-      }
-
-      // Ensure user exists in Firestore
-      let existingUser = await getUserById(currentUser.uid);
-      if (!existingUser) {
-        const users = await getUsers();
-        const seeded = users.find(u => u.email === currentUser.email);
-
-        if (seeded) {
-          await updateUser(seeded.id, {
-            name: currentUser.displayName || seeded.name,
-            email: currentUser.email,
-            role: seeded.role,
-            createdAt: seeded.createdAt,
-          });
-          await deleteUser(seeded.id);
-        } else {
-          await addUser({
-            name: currentUser.displayName || currentUser.email.split('@')[0],
-            email: currentUser.email,
-            role: 'user',
-            createdAt: new Date(),
-          });
+      if (currentUser) {
+        // Check if user exists in Firestore, if not create them
+        const existingUser = await getUserById(currentUser.uid);
+        if (!existingUser) {
+          // Check if there's a seeded user with the same email
+          const users = await getUsers();
+          const seededUser = users.find(u => u.email === currentUser.email);
+          if (seededUser) {
+            // Update seeded user with auth UID
+            await updateUser(seededUser.id, {
+              name: currentUser.displayName || seededUser.name,
+              email: currentUser.email,
+              role: seededUser.role,
+              createdAt: seededUser.createdAt
+            });
+            // Delete old seeded user document
+            await deleteUser(seededUser.id);
+          } else {
+            // Create new user
+            await addUser({
+              name: currentUser.displayName || currentUser.email.split('@')[0],
+              email: currentUser.email,
+              role: 'user',
+              createdAt: new Date()
+            });
+          }
         }
 
-        existingUser = await getUserById(currentUser.uid);
+        const userData = await getUserById(currentUser.uid);
+        console.log('User data:', userData);
+        console.log('User role:', userData?.role);
+        console.log('User email:', currentUser.email);
+
+        // Temporary fix: Check both Firestore role and admin email
+        const isAdminUser = userData?.role === 'admin' || currentUser.email === 'admin@sustaina.com';
+        setIsAdmin(isAdminUser);
+        console.log('Is admin:', isAdminUser);
+      } else {
+        setIsAdmin(false);
       }
-
-      const isAdminUser = existingUser?.role === 'admin' || currentUser.email === 'admin@sustaina.com';
-      setIsAdmin(isAdminUser);
     });
-
     return () => unsubscribe();
   }, []);
 
-  const logout = async () => {
-    await signOut(auth);
-    setUser(null);
-  };
-
-  return { user, isAdmin, logout };
-};
-
-const useCart = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
-  // Load from localStorage
+  /* ================= CART STORAGE ================= */
   useEffect(() => {
     const saved = localStorage.getItem('sustaina_cart');
     if (saved) {
       try {
         setCartItems(JSON.parse(saved));
       } catch {
-        console.error('Failed to parse cart');
+        console.error('Failed to load cart');
       }
     }
   }, []);
 
-  // Save to localStorage
   useEffect(() => {
     localStorage.setItem('sustaina_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
+  /* ================= CART ACTIONS ================= */
   const addToCart = (product: Product) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
-      if (existing) return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      if (existing) {
+        return prev.map(item =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
       return [...prev, { ...product, quantity: 1 }];
     });
     setIsCartOpen(true);
   };
 
-  const removeFromCart = (id: string) => setCartItems(prev => prev.filter(item => item.id !== id));
-  const updateQuantity = (id: string, quantity: number) => setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity } : item));
+  const removeFromCart = (id: string) => {
+    setCartItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateQuantity = (id: string, quantity: number) => {
+    setCartItems(prev =>
+      prev.map(item => (item.id === id ? { ...item, quantity } : item))
+    );
+  };
+
   const clearCart = () => setCartItems([]);
 
+  const openAuth = (type: 'login' | 'signup') => {
+    setAuthModal({ isOpen: true, type });
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setUser(null);
+  };
+
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-
-  return { cartItems, isCartOpen, setIsCartOpen, addToCart, removeFromCart, updateQuantity, clearCart, cartCount };
-};
-
-/* ================= APP ================= */
-const App: React.FC = () => {
-  const { user, isAdmin, logout } = useAuth();
-  const isOffline = useOnlineStatus();
-  const [mounted, setMounted] = useState(false);
-  const [authModal, setAuthModal] = useState<{ isOpen: boolean; type: 'login' | 'signup' }>({ isOpen: false, type: 'login' });
-  const { cartItems, isCartOpen, setIsCartOpen, addToCart, removeFromCart, updateQuantity, clearCart, cartCount } = useCart();
-
-  useEffect(() => { document.body.style.overflowX = 'hidden'; }, []);
-  useEffect(() => requestAnimationFrame(() => setMounted(true)), []);
-
-  const openAuth = (type: 'login' | 'signup') => setAuthModal({ isOpen: true, type });
 
   return (
     <Router>
       <ScrollToTop />
-      <div className="flex flex-col min-h-[100dvh] bg-white selection:bg-sustaina-green selection:text-white">
 
-        {/* Offline Banner */}
+      <div className="flex flex-col min-h-[100dvh] bg-white selection:bg-sustaina-green selection:text-white">
+        {/* ================= OFFLINE BANNER (NO ANIMATION) ================= */}
         {isOffline && (
           <div className="bg-amber-500 text-white text-[10px] font-black uppercase tracking-[0.2em] py-2 text-center sticky top-0 z-[60]">
             <i className="fa-solid fa-cloud-showers-heavy mr-2"></i>
@@ -168,9 +188,7 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Routes */}
         <Routes>
-          {/* Admin Routes */}
           <Route path="/admin/*" element={
             isAdmin ? (
               <AdminLayout>
@@ -181,10 +199,10 @@ const App: React.FC = () => {
                   <Route path="/orders" element={<AdminOrders />} />
                 </Routes>
               </AdminLayout>
-            ) : <NotFound />
+            ) : (
+              <NotFound />
+            )
           } />
-
-          {/* Public Routes */}
           <Route path="*" element={
             <>
               <Navbar
@@ -193,8 +211,9 @@ const App: React.FC = () => {
                 onOpenAuth={openAuth}
                 user={user}
                 isAdmin={isAdmin}
-                onLogout={logout}
+                onLogout={handleLogout}
               />
+
               <main className="flex-grow">
                 <Routes>
                   <Route path="/" element={<Home onAddToCart={addToCart} />} />
@@ -208,12 +227,13 @@ const App: React.FC = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
+
               <Footer />
             </>
           } />
         </Routes>
 
-        {/* Delayed overlays */}
+        {/* ================= DELAYED OVERLAYS ================= */}
         {mounted && (
           <>
             <CartDrawer
@@ -223,16 +243,18 @@ const App: React.FC = () => {
               onRemove={removeFromCart}
               onUpdateQuantity={updateQuantity}
             />
+
             <AuthModal
               isOpen={authModal.isOpen}
               onClose={() => setAuthModal({ ...authModal, isOpen: false })}
               type={authModal.type}
             />
+
+            {/* <ChatAssistant /> */}
           </>
         )}
       </div>
     </Router>
   );
 };
-
 export default App;
