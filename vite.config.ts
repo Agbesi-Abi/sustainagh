@@ -24,19 +24,6 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, 'src'),
         }
-      },
-      build: {
-        target: 'es2015', // Ensure compatibility with Safari
-        minify: 'terser',
-        terserOptions: {
-          compress: {
-            drop_console: mode === 'production',
-            drop_debugger: mode === 'production',
-          },
-        },
-      },
-      esbuild: {
-        target: 'es2015', // Ensure ES2015+ for better Safari support
-      },
+      }
     };
 });

@@ -3,9 +3,9 @@ import { GoogleGenAI } from "@google/genai";
 import { PRODUCTS } from "../../constants";
 
 export async function getSustainaAdvice(query: string, history: { role: 'user' | 'model', text: string }[]) {
-  // Always initialize GoogleGenAI with a named parameter for apiKey using process.env.GEMINI_API_KEY directly.
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  const model = 'gemini-3-flash-preview';
+  // Always initialize GoogleGenAI with a named parameter for apiKey using process.env.API_KEY directly.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const model = 'gemini-1.5-flash';
   
   const systemInstruction = `
     You are Sustaina AI, an expert in Ghanaian food culture, local agriculture, and sustainability. 

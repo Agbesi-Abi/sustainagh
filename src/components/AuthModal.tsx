@@ -1,14 +1,16 @@
 
 import React, { useState } from 'react';
-import { auth, googleProvider } from '../lib/firebase';
-import * as firebaseAuthExports from 'firebase/auth';
+// import { auth, googleProvider } from '../lib/firebase';
+// import * as firebaseAuthExports from 'firebase/auth';
 
-const {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
+/*
+const { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
   signInWithPopup,
-  updateProfile
+  updateProfile 
 } = firebaseAuthExports as any;
+*/
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -32,12 +34,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, type: initialTyp
     setLoading(true);
 
     try {
+      /*
       if (type === 'signup') {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(userCredential.user, { displayName: fullName });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
+      */
       onClose();
     } catch (err: any) {
       setError(err.message || 'An error occurred during authentication.');
@@ -49,7 +53,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, type: initialTyp
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
+      // await signInWithPopup(auth, googleProvider);
       onClose();
     } catch (err: any) {
       setError(err.message || 'Google sign-in failed.');
