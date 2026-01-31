@@ -1,119 +1,172 @@
-
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-// Fix: Use any for user to resolve missing member error in firebase/auth types
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 interface NavbarProps {
-  cartCount: number;
-  onOpenCart: () => void;
-  onOpenAuth: (type: 'login' | 'signup') => void;
-  user: any | null;
-  onLogout: () => void;
+  cartCount: number
+  onOpenCart: () => void
+  onOpenAuth: (type: 'login' | 'signup') => void
+  user: any | null
+  onLogout: () => void
 }
 
-const Navbar: React.FC<NavbarProps> = ({ cartCount, onOpenCart, onOpenAuth, user, onLogout }) => {
-  const [searchValue, setSearchValue] = useState('');
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const navigate = useNavigate();
+const Navbar: React.FC<NavbarProps> = ({
+  cartCount,
+  onOpenCart,
+  onOpenAuth,
+  user,
+  onLogout
+}) => {
+  const [searchValue, setSearchValue] = useState('')
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const navigate = useNavigate()
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchValue.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchValue.trim())}`);
-      setSearchValue('');
-    }
-  };
+    e.preventDefault()
+    if (!searchValue.trim()) return
+    navigate(`/shop?search=${encodeURIComponent(searchValue.trim())}`)
+    setSearchValue('')
+    setMobileOpen(false)
+  }
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-stone-100 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto flex items-center h-20 gap-8">
-        {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2 shrink-0">
-          <i className="fa-solid fa-leaf text-sustaina-green text-2xl"></i>
-          <span className="text-2xl font-bold tracking-tight text-sustaina-green">Sustaina</span>
+    <header className="sticky top-0 z-50 backdrop-blur bg-white/80 border-b border-stone-100">
+      <nav className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+
+        {/* LOGO */}
+        <Link to="/" className="flex items-center gap-2 shrink-0">
+          <img
+            src="/Sustaina Logo@18x.png"
+            alt="Sustaina Logo"
+            className="w-9 h-9 object-contain"
+          />
+          <span className="text-xl font-extrabold tracking-tight text-sustaina-green">
+            Sustaina
+          </span>
         </Link>
 
-        {/* Search Bar */}
-        <form className="flex-1 hidden md:block" onSubmit={handleSearch}>
-          <div className="relative group">
-            <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"></i>
-            <input 
-              type="text" 
+        {/* SEARCH (DESKTOP) */}
+        <form
+          onSubmit={handleSearch}
+          className="hidden md:flex flex-1 max-w-xl"
+        >
+          <div className="relative w-full">
+            <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-sm" />
+            <input
               value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Search for yam, shito, tilapia..."
-              className="w-full bg-stone-50 border border-stone-100 rounded-lg py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-sustaina-green/10 transition-all"
+              onChange={e => setSearchValue(e.target.value)}
+              placeholder="Search fresh groceries…"
+              className="w-full rounded-full bg-stone-50 border border-stone-200 py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-sustaina-green/20"
             />
           </div>
         </form>
 
-        {/* Links */}
-        <div className="flex items-center space-x-6 text-sm font-medium text-stone-600">
-          <Link to="/shop" className="hover:text-sustaina-green transition-colors">Shop</Link>
-          <Link to="/deals" className="hover:text-sustaina-green transition-colors">Deals</Link>
-          <Link to="/recipes" className="hover:text-sustaina-green transition-colors">Recipes</Link>
-          
+        {/* RIGHT ACTIONS */}
+        <div className="flex items-center gap-3">
+
+          {/* CART */}
+          <button
+            onClick={onOpenCart}
+            className="relative p-2 rounded-full hover:bg-stone-100 transition"
+          >
+            <i className="fa-solid fa-cart-shopping text-lg" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-sustaina-yellow text-[10px] font-bold text-white flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+          {/* USER */}
           {user ? (
             <div className="relative">
-              <button 
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 px-3 py-2 bg-stone-50 rounded-lg border border-stone-100 hover:bg-stone-100 transition-all"
+              <button
+                onClick={() => setShowUserMenu(v => !v)}
+                className="flex items-center gap-2 rounded-full border border-stone-200 px-2 py-1.5 hover:bg-stone-50 transition"
               >
-                <div className="w-6 h-6 bg-sustaina-yellow rounded-full flex items-center justify-center text-[10px] font-bold text-stone-800">
-                  {user.displayName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
+                <div className="w-7 h-7 rounded-full bg-sustaina-yellow text-stone-800 flex items-center justify-center text-xs font-bold">
+                  {(user.displayName || user.email)?.charAt(0).toUpperCase()}
                 </div>
-                <span className="hidden lg:inline text-stone-800 font-bold">{user.displayName || 'Account'}</span>
-                <i className={`fa-solid fa-chevron-down text-[10px] transition-transform ${showUserMenu ? 'rotate-180' : ''}`}></i>
+                <i className="fa-solid fa-chevron-down text-[10px]" />
               </button>
-              
+
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-stone-100 p-2 z-[60] animate-in fade-in slide-in-from-top-2">
-                  <Link 
-                    to="/orders" 
+                <div className="absolute right-0 mt-3 w-52 rounded-2xl bg-white shadow-xl border border-stone-100 p-2">
+                  <Link
+                    to="/orders"
                     onClick={() => setShowUserMenu(false)}
-                    className="block w-full text-left px-4 py-2 text-stone-600 hover:bg-stone-50 rounded-lg transition-colors"
+                    className="block px-4 py-2 rounded-lg text-sm hover:bg-stone-50"
                   >
                     My Orders
                   </Link>
-                  <Link 
-                    to="/admin" 
+                  <Link
+                    to="/admin"
                     onClick={() => setShowUserMenu(false)}
-                    className="block w-full text-left px-4 py-2 text-stone-600 hover:bg-stone-50 rounded-lg transition-colors"
+                    className="block px-4 py-2 rounded-lg text-sm hover:bg-stone-50"
                   >
                     Admin Dashboard
                   </Link>
-                  <hr className="my-2 border-stone-100" />
-                  <button 
-                    onClick={() => { onLogout(); setShowUserMenu(false); }}
-                    className="block w-full text-left px-4 py-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors font-bold"
+                  <hr className="my-2" />
+                  <button
+                    onClick={() => {
+                      onLogout()
+                      setShowUserMenu(false)
+                    }}
+                    className="w-full text-left px-4 py-2 rounded-lg text-sm font-semibold text-rose-500 hover:bg-rose-50"
                   >
-                    Log Out
+                    Log out
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex items-center space-x-3">
-              <button onClick={() => onOpenAuth('login')} className="hidden sm:inline-block px-4 py-2 text-stone-800 font-semibold border border-stone-200 rounded-lg hover:bg-stone-50 transition-all">Log In</button>
-              <button onClick={() => onOpenAuth('signup')} className="px-4 py-2 bg-sustaina-green text-white font-semibold rounded-lg hover:opacity-90 transition-all shadow-md shadow-sustaina-green/10">Sign Up</button>
-            </div>
+            <>
+              <button
+                onClick={() => onOpenAuth('login')}
+                className="hidden sm:inline text-sm font-semibold px-4 py-2 rounded-full border border-stone-200 hover:bg-stone-50"
+              >
+                Log in
+              </button>
+              <button
+                onClick={() => onOpenAuth('signup')}
+                className="text-sm font-semibold px-4 py-2 rounded-full bg-sustaina-green text-white hover:opacity-90 shadow"
+              >
+                Sign up
+              </button>
+            </>
           )}
-          
-          <button 
-            onClick={onOpenCart}
-            className="relative p-2 text-stone-800 hover:text-sustaina-green transition-colors"
+
+          {/* MOBILE MENU */}
+          <button
+            onClick={() => setMobileOpen(v => !v)}
+            className="md:hidden p-2 rounded-full hover:bg-stone-100"
           >
-            <i className="fa-solid fa-cart-shopping text-xl"></i>
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-sustaina-yellow rounded-full border-2 border-white">
-                {cartCount}
-              </span>
-            )}
+            <i className={`fa-solid ${mobileOpen ? 'fa-xmark' : 'fa-bars'} text-lg`} />
           </button>
         </div>
-      </div>
-    </nav>
-  );
-};
+      </nav>
 
-export default Navbar;
+      {/* MOBILE PANEL */}
+      {mobileOpen && (
+        <div className="md:hidden px-4 pb-4 space-y-4 bg-white border-t border-stone-100">
+          <form onSubmit={handleSearch}>
+            <input
+              value={searchValue}
+              onChange={e => setSearchValue(e.target.value)}
+              placeholder="Search groceries…"
+              className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm"
+            />
+          </form>
+
+          <div className="flex flex-col gap-3 font-medium text-stone-700">
+            <Link to="/shop" onClick={() => setMobileOpen(false)}>Shop</Link>
+            <Link to="/deals" onClick={() => setMobileOpen(false)}>Deals</Link>
+            <Link to="/recipes" onClick={() => setMobileOpen(false)}>Recipes</Link>
+          </div>
+        </div>
+      )}
+    </header>
+  )
+}
+
+export default Navbar

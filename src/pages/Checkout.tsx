@@ -207,12 +207,6 @@ const Checkout: React.FC<CheckoutProps> = ({ items, clearCart, user }) => {
               </div>
             </div>
             
-            <div className="mt-10 p-4 bg-emerald-50 rounded-2xl flex items-center gap-4">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-600 shadow-sm">
-                <i className="fa-solid fa-leaf"></i>
-              </div>
-              <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">You're supporting 4 local farms with this order!</p>
-            </div>
           </div>
         </div>
       </div>

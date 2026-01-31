@@ -31,3 +31,22 @@ export interface Recipe {
   ingredients: string[]; // IDs of products
   instructions: string[];
 }
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'admin';
+  createdAt: Date;
+}
+
+export interface Order {
+  id: string;
+  customerName: string;
+  email: string;
+  region: string;
+  items: CartItem[];
+  total: number;
+  status: 'Pending' | 'Processing' | 'Delivered';
+  createdAt: Date;
+}

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Product } from '../types';
 import { Link } from 'react-router-dom';
@@ -10,42 +9,51 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   return (
-    <div className="flex flex-col bg-white rounded-xl border border-stone-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
-      <Link to={`/product/${product.id}`} className="block aspect-square overflow-hidden bg-stone-50 relative">
-        <img 
-          src={product.image} 
-          alt={product.name}
-          loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/5 transition-colors duration-300" />
-      </Link>
+    <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300">
       
-      <div className="p-5 flex flex-col flex-1">
-        <div className="mb-4">
-          <div className="flex justify-between items-start mb-1">
-            <h3 className="font-bold text-lg text-stone-900 leading-tight group-hover:text-sustaina-green transition-colors">{product.name}</h3>
-            {product.originalPrice && (
-              <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">SALE</span>
-            )}
-          </div>
-          <p className="text-sm text-stone-500 line-clamp-2">{product.description}</p>
-        </div>
-        
-        <div className="mt-auto">
-          <div className="flex items-baseline gap-2 mb-4">
-            <p className="text-lg font-bold text-stone-900">GH₵{product.price.toFixed(2)}</p>
-            {product.originalPrice && (
-              <p className="text-xs text-stone-400 line-through">GH₵{product.originalPrice.toFixed(2)}</p>
-            )}
-          </div>
-          <button 
-            onClick={() => onAddToCart(product)}
-            className="w-full py-3 bg-sustaina-green text-white font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-opacity-90 active:scale-[0.98] transition-all"
-          >
-            <i className="fa-solid fa-cart-plus"></i>
-            Add to Cart
-          </button>
+      {/* Image */}
+      <div className="relative aspect-[4/5] bg-stone-100 overflow-hidden">
+        <Link to={`/product/${product.id}`}>
+          <img
+            src={product.image}
+            alt={product.name}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        </Link>
+
+        {/* Sale badge */}
+        {product.originalPrice && (
+          <span className="absolute top-4 left-4 text-[10px] tracking-wide uppercase bg-black/70 text-white px-3 py-1 rounded-full backdrop-blur">
+            Sale
+          </span>
+        )}
+
+        {/* Hover Add to Cart */}
+        <button
+          onClick={() => onAddToCart(product)}
+          className="absolute inset-x-4 bottom-4 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 bg-white/90 backdrop-blur-md text-stone-900 rounded-full py-3 text-sm font-medium shadow-lg hover:bg-white"
+        >
+          Add to Cart
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="p-5">
+        <h3 className="text-base font-medium text-stone-900 leading-snug truncate">
+          {product.name}
+        </h3>
+
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-lg font-semibold text-stone-900">
+            GH₵{product.price.toFixed(2)}
+          </span>
+
+          {product.originalPrice && (
+            <span className="text-sm text-stone-400 line-through">
+              GH₵{product.originalPrice.toFixed(2)}
+            </span>
+          )}
         </div>
       </div>
     </div>

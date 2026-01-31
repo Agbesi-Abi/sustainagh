@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
@@ -10,144 +9,152 @@ interface HomeProps {
 }
 
 const Home: React.FC<HomeProps> = ({ onAddToCart }) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [productsData, categoriesData] = await Promise.all([
+          getProductsAsync(),
+          getCategoriesAsync(),
+        ]);
+        setProducts(productsData);
+        setCategories(categoriesData);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-stone-300 border-t-stone-900 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="pb-24">
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
-        <div className="relative h-[600px] md:h-[700px] w-full rounded-[3rem] overflow-hidden group shadow-2xl">
-          <img 
-            src="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=2000" 
-            alt="Tomatoes Background" 
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-stone-900/80 via-stone-900/40 to-transparent"></div>
-          
-          <div className="relative h-full flex flex-col justify-center px-8 md:px-20 text-white max-w-4xl">
-            <div className="flex items-center gap-3 mb-6 animate-in slide-in-from-left duration-700">
-              <span className="px-4 py-1.5 bg-sustaina-yellow text-stone-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-full">New Harvest Season</span>
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-            </div>
-            <h1 className="text-5xl md:text-8xl font-black leading-[0.9] mb-8 tracking-tighter animate-in slide-in-from-left duration-1000">
-              Fresh, Local <br /><span className="text-sustaina-yellow">Soil-to-Soul.</span>
-            </h1>
-            <p className="text-xl md:text-2xl font-medium mb-12 text-stone-100/90 max-w-xl leading-relaxed">
-              We bridge the gap between Ghana's finest smallholder farms and your kitchen table. Sustainable, traceable, and delicious.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link 
-                to="/shop" 
-                className="inline-block px-12 py-5 bg-sustaina-yellow text-stone-900 font-black rounded-2xl text-lg hover:bg-white hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-stone-900/50"
+    <main className="bg-stone-50">
+      {/* ================= HERO ================= */}
+      <section className="px-4 sm:px-6 lg:px-8 pt-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative rounded-3xl overflow-hidden bg-stone-900">
+            <img
+              src="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=1800&q=80"
+              className="absolute inset-0 w-full h-full object-cover opacity-60"
+              alt="Fresh Ghana produce"
+            />
+
+            <div className="relative px-6 py-20 sm:px-12 lg:px-20 max-w-2xl text-white">
+              <span className="inline-block mb-4 text-xs tracking-widest uppercase text-white/70">
+                Farm to Table
+              </span>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight">
+                Premium Ghanaian
+                <span className="block text-sustaina-yellow">Farm Produce</span>
+              </h1>
+
+              {/* <p className="mt-6 text-white/80 text-base sm:text-lg leading-relaxed">
+                Carefully sourced from trusted farms across Ghana. Fresh, traceable,
+                and delivered with care.
+              </p> */}
+
+              <Link
+                to="/shop"
+                className="inline-flex mt-10 items-center justify-center rounded-full bg-white text-stone-900 px-8 py-4 font-medium hover:bg-stone-100 transition"
               >
-                Shop the Market
-              </Link>
-              <Link 
-                to="/about" 
-                className="inline-block px-12 py-5 bg-white/10 backdrop-blur-md text-white font-black border border-white/20 rounded-2xl text-lg hover:bg-white/20 transition-all"
-              >
-                Our Farmers
+                Shop Now
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Categories Grid */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 mt-32">
-        <div className="flex justify-between items-end mb-12">
-          <div>
-            <h2 className="text-4xl font-black text-stone-900 tracking-tight">Shop by Source</h2>
-            <p className="text-stone-500 mt-2">Discover curated produce from across Ghana.</p>
-          </div>
-          <Link to="/shop" className="hidden sm:block text-sustaina-green font-bold hover:underline">View All Produce →</Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-          {CATEGORIES.map((cat, i) => (
-            <Link 
-              key={i} 
-              to={`/shop?category=${cat.name}`} 
-              className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden group shadow-md hover:shadow-2xl transition-all duration-500"
+      {/* ================= FEATURED ================= */}
+      <section className="px-4 sm:px-6 lg:px-8 mt-24">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-semibold text-stone-900">
+                Seasonal Selection
+              </h2>
+              <p className="text-stone-500 mt-2">
+                Handpicked produce from this week’s harvest
+              </p>
+            </div>
+
+            <Link
+              to="/shop"
+              className="hidden sm:inline text-sm font-medium text-stone-700 hover:text-black"
             >
-              <img 
-                src={cat.image} 
-                alt={cat.name} 
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-125"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/90 via-transparent to-transparent group-hover:from-sustaina-green/90 transition-colors"></div>
-              <div className="absolute bottom-6 left-6 right-6">
-                <span className="text-white font-black text-xl leading-tight block">{cat.name}</span>
-              </div>
+              View all →
             </Link>
-          ))}
+          </div>
+
+<div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+            {products.slice(0, 4).map(product => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={onAddToCart}
+              />
+            ))}
+          </div>
+
+          <div className="mt-12 sm:hidden text-center">
+            <Link
+              to="/shop"
+              className="inline-block px-8 py-4 rounded-full border border-stone-300 text-stone-900"
+            >
+              Browse All Products
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* The Sustaina Way (USPs) */}
-      <section className="bg-stone-50 py-32 mt-32">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-20">
-            <span className="text-xs font-black uppercase tracking-[0.3em] text-sustaina-green mb-4 block">The Mission</span>
-            <h2 className="text-4xl md:text-5xl font-black text-stone-900 tracking-tight">The Sustaina Way</h2>
+      {/* ================= CATEGORIES ================= */}
+      <section className="px-4 sm:px-6 lg:px-8 mt-28 pb-24">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-12">
+            <h2 className="text-3xl font-semibold text-stone-900">
+              Shop by Category
+            </h2>
+            <p className="text-stone-500 mt-2">
+              Explore our diverse range of fresh produce
+            </p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-              { icon: 'fa-hand-holding-heart', title: 'Direct to Farmer', desc: 'We skip the middlemen. 85% of every cedi goes directly to our smallholder farmer partners.', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-              { icon: 'fa-truck-fast', title: 'Carbon-Neutral Loop', desc: 'Our delivery routes are optimized by AI to minimize emissions. Eco-friendly packaging is standard.', bg: 'bg-sustaina-yellow/20', text: 'text-stone-900' },
-              { icon: 'fa-award', title: 'Certified Fresh', desc: 'Picked today, at your door tomorrow. We guarantee maximum nutrient density in every bite.', bg: 'bg-blue-50', text: 'text-blue-600' },
-            ].map((usp, i) => (
-              <div key={i} className="bg-white p-12 rounded-[3.5rem] shadow-sm hover:shadow-xl transition-all duration-500 border border-stone-100 text-center">
-                <div className={`w-20 h-20 rounded-3xl ${usp.bg} ${usp.text} flex items-center justify-center mx-auto mb-8 text-3xl`}>
-                  <i className={`fa-solid ${usp.icon}`}></i>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+            {categories.map((cat, i) => (
+              <Link
+                key={i}
+                to={`/shop?category=${cat.name}`}
+                className="group relative rounded-2xl overflow-hidden bg-stone-900 aspect-[3/4]"
+              >
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-700"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+
+                <div className="absolute bottom-0 p-4">
+                  <p className="text-white font-medium text-lg">
+                    {cat.name}
+                  </p>
                 </div>
-                <h3 className="text-2xl font-black text-stone-900 mb-4">{usp.title}</h3>
-                <p className="text-stone-500 leading-relaxed font-medium">{usp.desc}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
-
-      {/* Featured Products */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 mt-32">
-        <div className="flex justify-between items-end mb-12">
-          <div>
-            <h2 className="text-4xl font-black text-stone-900 tracking-tight">Seasonal Picks</h2>
-            <p className="text-stone-500 mt-2">The best of this week's harvest.</p>
-          </div>
-          <Link to="/shop" className="text-sustaina-green font-bold hover:underline">View All →</Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {PRODUCTS.slice(0, 4).map(product => (
-            <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
-          ))}
-        </div>
-      </section>
-
-      {/* Trust Badges */}
-      {/* <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-20">
-        <div className="rounded-2xl bg-stone-50 p-8 md:p-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-sustaina-green mb-2">100+</div>
-              <div className="text-stone-600">Local Farms</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-sustaina-green mb-2">24h</div>
-              <div className="text-stone-600">Fresh Delivery</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-sustaina-green mb-2">Traceable</div>
-              <div className="text-stone-600">Supply Chain</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-sustaina-green mb-2">Eco-Friendly</div>
-              <div className="text-stone-600">Packaging</div>
-            </div>
-          </div>
-        </div>
-      </section> */}
-    </div>
+    </main>
   );
 };
 

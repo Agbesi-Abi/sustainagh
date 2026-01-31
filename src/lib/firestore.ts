@@ -1,6 +1,6 @@
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import { db } from './firebase';
-import { Product, Recipe } from '../types';
+import { Product, Recipe, User, Order } from '../types';
 
 // Products
 export const getProducts = async (): Promise<Product[]> => {
@@ -10,9 +10,14 @@ export const getProducts = async (): Promise<Product[]> => {
 };
 
 export const getProductById = async (id: string): Promise<Product | null> => {
-  const docRef = doc(db, 'products', id);
-  const snapshot = await getDoc(docRef);
-  return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as Product : null;
+  const productsRef = collection(db, 'products');
+  const q = query(productsRef, where('id', '==', id));
+  const snapshot = await getDocs(q);
+  if (!snapshot.empty) {
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() } as Product;
+  }
+  return null;
 };
 
 export const addProduct = async (product: Omit<Product, 'id'>): Promise<string> => {
@@ -81,5 +86,23 @@ export const updateUser = async (id: string, updates: Partial<User>): Promise<vo
 
 export const deleteUser = async (id: string): Promise<void> => {
   const docRef = doc(db, 'users', id);
+  await deleteDoc(docRef);
+};
+
+// Orders
+export const getOrders = async (): Promise<Order[]> => {
+  const ordersRef = collection(db, 'orders');
+  const q = query(ordersRef, orderBy('createdAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+};
+
+export const updateOrderStatus = async (id: string, status: Order['status']): Promise<void> => {
+  const docRef = doc(db, 'orders', id);
+  await updateDoc(docRef, { status });
+};
+
+export const deleteOrder = async (id: string): Promise<void> => {
+  const docRef = doc(db, 'orders', id);
   await deleteDoc(docRef);
 };

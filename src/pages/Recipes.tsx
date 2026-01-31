@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { RECIPES, PRODUCTS } from '../../constants';
-import { Product } from '../types';
+import React, { useState, useEffect } from 'react';
+import { getRecipesAsync, getProductsAsync } from '../../constants';
+import { Product, Recipe } from '../types';
 import { Link } from 'react-router-dom';
 
 interface RecipesProps {
@@ -17,7 +17,7 @@ const Recipes: React.FC<RecipesProps> = ({ onAddToCart }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {RECIPES.map(recipe => (
+        {recipes.map(recipe => (
           <div key={recipe.id} className="bg-white rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm hover:shadow-xl transition-all group">
             <div className="aspect-[16/9] overflow-hidden relative">
               <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
@@ -35,7 +35,7 @@ const Recipes: React.FC<RecipesProps> = ({ onAddToCart }) => {
                 <h3 className="text-sm font-extrabold text-stone-900 uppercase tracking-widest mb-4">Required Ingredients</h3>
                 <div className="flex flex-wrap gap-3">
                   {recipe.ingredients.map(prodId => {
-                    const product = PRODUCTS.find(p => p.id === prodId);
+                    const product = products.find(p => p.id === prodId);
                     if (!product) return null;
                     return (
                       <div key={prodId} className="flex items-center gap-3 bg-stone-50 p-2 pr-2 rounded-xl border border-stone-100 group/item hover:border-sustaina-green/30 hover:bg-white transition-all">
